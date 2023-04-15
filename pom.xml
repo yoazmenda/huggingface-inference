@@ -1,21 +1,42 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <groupId>com.yoazmenda</groupId>
     <artifactId>huggingface-inference</artifactId>
-    <packaging>jar</packaging>
-    <version>1.0-SNAPSHOT</version>
-    <name>huggingface-inference</name>
-    <url>http://maven.apache.org</url>
-    <dependencies>
+    <version>1.0.0</version>
+    <name>HuggingFace Inference</name>
+    <description>A package for performing inference with Hugging Face models</description>
 
-        <!-- https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp -->
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://opensource.org/licenses/MIT</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>Yoaz Menda</name>
+            <email>yoazmenda@gmail.com</email>
+        </developer>
+    </developers>
+
+    <scm>
+        <url>https://github.com/yoazmenda/huggingface-inference</url>
+        <connection>scm:git:git://github.com/yoazmenda/huggingface-inference.git</connection>
+        <developerConnection>scm:git:ssh://github.com/yoazmenda/huggingface-inference.git</developerConnection>
+    </scm>
+
+    <dependencies>
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>
             <artifactId>okhttp</artifactId>
             <version>4.10.0</version>
         </dependency>
-
 
         <dependency>
             <groupId>org.testng</groupId>
@@ -24,13 +45,18 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
     <distributionManagement>
         <repository>
-            <id>github</id>
-            <name>GitHub Packages</name>
-            <url>https://maven.pkg.github.com/yoazmenda/huggingface-inference</url>
+            <id>sonatype-nexus-releases</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
         </repository>
+        <snapshotRepository>
+            <id>sonatype-nexus-snapshots</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
     </distributionManagement>
+
     <build>
         <plugins>
             <plugin>
@@ -48,6 +74,6 @@
                 </configuration>
             </plugin>
         </plugins>
-
     </build>
+
 </project>
