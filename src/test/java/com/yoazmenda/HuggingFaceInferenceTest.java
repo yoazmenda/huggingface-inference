@@ -8,7 +8,7 @@ import static org.testng.Assert.assertFalse;
 
 public class HuggingFaceInferenceTest {
 
-    @Test
+    @Test(enabled = false)
     public void testInference() throws IOException {
         String API_TOKEN = System.getenv("HF_API_KEY");
         HuggingFaceInference inference = new HuggingFaceInference("gpt2", API_TOKEN);
