@@ -1,6 +1,6 @@
 package com.yoazmenda;
 
-import com.squareup.okhttp.*;
+import okhttp3.*;
 
 import java.io.IOException;
 
@@ -22,18 +22,19 @@ public class HuggingFaceInference {
     public String infer(String inputs) throws IOException {
         String url = "https://api-inference.huggingface.co/models/" + repoId;
         String jsonInput = String.format("{\"inputs\":\"%s\", \"temperature\":%.2f, \"max_length\":%d}", inputs, temperature, maxTokens);
-        RequestBody requestBody = RequestBody.create(MediaType.parse("application/json"), jsonInput);
+        RequestBody requestBody = RequestBody.create(jsonInput, MediaType.parse("application/json"));
         Request request = new Request.Builder()
                 .url(url)
                 .addHeader("Authorization", "Bearer " + API_KEY)
                 .post(requestBody)
                 .build();
 
-        Response response = client.newCall(request).execute();
-        if (response.isSuccessful()) {
-            return response.body().string();
-        } else {
-            throw new IOException("Unexpected response code: " + response.code());
+        try (Response response = client.newCall(request).execute()) {
+            if (response.isSuccessful()) {
+                return response.body().string();
+            } else {
+                throw new IOException("Unexpected response code: " + response.code());
+            }
         }
     }
 }
