@@ -3,9 +3,9 @@
 A Java client library for the Hugging Face Inference API, enabling easy integration of models into Java-based applications.
 
 ## Features
-Easy integration with Hugging Face API
-Customizable parameters for inference, such as temperature and max length
-Built-in retry mechanism for API calls
+- Easy integration with Hugging Face API
+- Customizable parameters for inference, such as temperature and max length
+- Built-in retry mechanism for API calls
 
 ## Getting Started
 
