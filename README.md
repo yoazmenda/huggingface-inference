@@ -1,4 +1,4 @@
-# HuggingFace-Inference
+# HuggingFace-Inference Java client
 
 A Java client library for the Hugging Face Inference API, enabling easy integration of models into Java-based applications.
 
