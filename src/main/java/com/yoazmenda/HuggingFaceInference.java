@@ -16,12 +16,12 @@ public class HuggingFaceInference {
     private final OkHttpClient client;
     private final String repoId;
     private final String apiKey;
-    private final float temperature;
+    private final Double temperature;
     private final int maxLength;
     private final int maxRetries;
     private final long retryDelay;
 
-    private HuggingFaceInference(String repoId, String apiKey, float temperature, int maxLength,
+    private HuggingFaceInference(String repoId, String apiKey, Double temperature, int maxLength,
                                  int maxRetries, long retryDelay) {
         this.repoId = repoId;
         this.apiKey = apiKey;
@@ -35,7 +35,7 @@ public class HuggingFaceInference {
     public static class Builder {
         private final String repoId;
         private final String apiKey;
-        private float temperature = 0.0f;
+        private Double temperature;
         private int maxLength = 100;
         private int maxRetries = 3;
         private long retryDelay = 1000;
@@ -45,7 +45,7 @@ public class HuggingFaceInference {
             this.apiKey = apiKey;
         }
 
-        public Builder temperature(float temperature) {
+        public Builder temperature(Double temperature) {
             this.temperature = temperature;
             return this;
         }
@@ -82,6 +82,9 @@ public class HuggingFaceInference {
         payload.put("inputs", inputs);
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("max_length", maxLength);
+        if (temperature != null) {
+            parameters.put("temperature", temperature);
+        }
         payload.put("parameters", parameters);
 
         String requestParams = objectMapper.writeValueAsString(payload);

@@ -26,6 +26,18 @@ public class HuggingFaceInferenceTest {
         assertFalse(result.isEmpty());
     }
 
+    @Test
+    public void testInferenceWithTemperature() throws IOException {
+        HuggingFaceInference inference = new HuggingFaceInference.Builder("gpt2", API_KEY)
+                .maxRetries(0)
+                .temperature(1.0)
+                .build();
+        String inputs = "hello";
+        String result = inference.infer(inputs);
+        logger.info("result: {}", result);
+        assertFalse(result.isEmpty());
+    }
+
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void testEmptyInput() throws IOException {
         HuggingFaceInference inference = new HuggingFaceInference.Builder("gpt2", API_KEY)
