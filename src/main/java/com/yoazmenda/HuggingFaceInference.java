@@ -1,7 +1,6 @@
 package com.yoazmenda;
 
 import okhttp3.*;
-
 import java.io.IOException;
 
 public class HuggingFaceInference {
@@ -10,13 +9,55 @@ public class HuggingFaceInference {
     private final OkHttpClient client;
     private final Double temperature;
     private final Integer maxTokens;
+    private final int maxRetries;
+    private final int retryDelay;
 
-    public HuggingFaceInference(String repoId, String apiKey, Double temperature, Integer maxTokens) {
+    private HuggingFaceInference(String repoId, String apiKey, Double temperature, Integer maxTokens, int maxRetries, int retryDelay) {
         this.repoId = repoId;
         this.API_KEY = apiKey;
         this.client = new OkHttpClient();
         this.temperature = temperature;
         this.maxTokens = maxTokens;
+        this.maxRetries = maxRetries;
+        this.retryDelay = retryDelay;
+    }
+
+    public static class Builder {
+        private String repoId;
+        private String apiKey;
+        private Double temperature;
+        private Integer maxTokens;
+        private int maxRetries = 0;
+        private int retryDelay = 0;
+
+        public Builder(String repoId, String apiKey) {
+            this.repoId = repoId;
+            this.apiKey = apiKey;
+        }
+
+        public Builder temperature(Double temperature) {
+            this.temperature = temperature;
+            return this;
+        }
+
+        public Builder maxTokens(Integer maxTokens) {
+            this.maxTokens = maxTokens;
+            return this;
+        }
+
+        public Builder maxRetries(int maxRetries) {
+            this.maxRetries = maxRetries;
+            return this;
+        }
+
+        public Builder retryDelay(int retryDelay) {
+            this.retryDelay = retryDelay;
+            return this;
+        }
+
+        public HuggingFaceInference build() {
+            return new HuggingFaceInference(repoId, apiKey, temperature, maxTokens, maxRetries, retryDelay);
+        }
     }
 
     public String infer(String inputs) throws IOException {
@@ -29,11 +70,21 @@ public class HuggingFaceInference {
                 .post(requestBody)
                 .build();
 
-        try (Response response = client.newCall(request).execute()) {
-            if (response.isSuccessful()) {
-                return response.body().string();
-            } else {
-                throw new IOException("Unexpected response code: " + response.code());
+        int retries = 0;
+        while (true) {
+            try (Response response = client.newCall(request).execute()) {
+                if (response.isSuccessful()) {
+                    return response.body().string();
+                } else if (retries < maxRetries) {
+                    retries++;
+                    try {
+                        Thread.sleep(retryDelay);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                } else {
+                    throw new IOException("Unexpected response code: " + response.code());
+                }
             }
         }
     }
