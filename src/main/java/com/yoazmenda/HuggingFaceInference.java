@@ -1,47 +1,57 @@
 package com.yoazmenda;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class HuggingFaceInference {
-    private final String API_KEY;
-    private final String repoId;
-    private final OkHttpClient client;
-    private final Double temperature;
-    private final Integer maxTokens;
-    private final int maxRetries;
-    private final int retryDelay;
+    private static final Logger logger = LoggerFactory.getLogger(HuggingFaceInference.class);
 
-    private HuggingFaceInference(String repoId, String apiKey, Double temperature, Integer maxTokens, int maxRetries, int retryDelay) {
+    private static final String API_URL = "https://api-inference.huggingface.co/models/";
+    private final OkHttpClient client;
+    private final String repoId;
+    private final String apiKey;
+    private final float temperature;
+    private final int maxLength;
+    private final int maxRetries;
+    private final long retryDelay;
+
+    private HuggingFaceInference(String repoId, String apiKey, float temperature, int maxLength,
+                                 int maxRetries, long retryDelay) {
         this.repoId = repoId;
-        this.API_KEY = apiKey;
-        this.client = new OkHttpClient();
+        this.apiKey = apiKey;
         this.temperature = temperature;
-        this.maxTokens = maxTokens;
+        this.maxLength = maxLength;
         this.maxRetries = maxRetries;
         this.retryDelay = retryDelay;
+        this.client = new OkHttpClient();
     }
 
     public static class Builder {
-        private String repoId;
-        private String apiKey;
-        private Double temperature;
-        private Integer maxTokens;
-        private int maxRetries = 0;
-        private int retryDelay = 0;
+        private final String repoId;
+        private final String apiKey;
+        private float temperature = 0.0f;
+        private int maxLength = 100;
+        private int maxRetries = 3;
+        private long retryDelay = 1000;
 
         public Builder(String repoId, String apiKey) {
             this.repoId = repoId;
             this.apiKey = apiKey;
         }
 
-        public Builder temperature(Double temperature) {
+        public Builder temperature(float temperature) {
             this.temperature = temperature;
             return this;
         }
 
-        public Builder maxTokens(Integer maxTokens) {
-            this.maxTokens = maxTokens;
+        public Builder maxLength(int maxLength) {
+            this.maxLength = maxLength;
             return this;
         }
 
@@ -50,32 +60,49 @@ public class HuggingFaceInference {
             return this;
         }
 
-        public Builder retryDelay(int retryDelay) {
+        public Builder retryDelay(long retryDelay) {
             this.retryDelay = retryDelay;
             return this;
         }
 
         public HuggingFaceInference build() {
-            return new HuggingFaceInference(repoId, apiKey, temperature, maxTokens, maxRetries, retryDelay);
+            return new HuggingFaceInference(repoId, apiKey, temperature, maxLength, maxRetries, retryDelay);
         }
     }
 
     public String infer(String inputs) throws IOException {
-        String url = "https://api-inference.huggingface.co/models/" + repoId;
-        String jsonInput = String.format("{\"inputs\":\"%s\", \"temperature\":%.2f, \"max_length\":%d}", inputs, temperature, maxTokens);
-        RequestBody requestBody = RequestBody.create(jsonInput, MediaType.parse("application/json"));
+        if (inputs.isEmpty()) {
+            throw new IllegalArgumentException("Input string cannot be empty");
+        }
+        String url = API_URL + repoId;
+
+        // Create the JSON payload using Jackson
+        ObjectMapper objectMapper = new ObjectMapper();
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("inputs", inputs);
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("max_length", maxLength);
+        payload.put("parameters", parameters);
+
+        String requestParams = objectMapper.writeValueAsString(payload);
+        logger.debug("request params: {}", requestParams);
+        RequestBody requestBody = RequestBody.create(requestParams, MediaType.parse("application/json"));
         Request request = new Request.Builder()
                 .url(url)
-                .addHeader("Authorization", "Bearer " + API_KEY)
+                .addHeader("Authorization", "Bearer " + apiKey)
                 .post(requestBody)
                 .build();
 
         int retries = 0;
+        logger.info("calling HuggingFace Inference endpoint with text={}", inputs);
         while (true) {
             try (Response response = client.newCall(request).execute()) {
                 if (response.isSuccessful()) {
+                    logger.debug("response successful: {}", response.body());
                     return response.body().string();
                 } else if (retries < maxRetries) {
+                    logger.debug("response not successful: {}", response.body());
+                    logger.debug("retrying...");
                     retries++;
                     try {
                         Thread.sleep(retryDelay);
@@ -83,6 +110,7 @@ public class HuggingFaceInference {
                         Thread.currentThread().interrupt();
                     }
                 } else {
+                    logger.error("Failed to query HuggingFace Inference with response: {}", response);
                     throw new IOException("Unexpected response code: " + response.code());
                 }
             }
