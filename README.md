@@ -17,7 +17,7 @@ Add the following dependency to your `pom.xml` file (the version number might ch
 
 ```xml
 <dependency>
-    <groupId>com.yoazmenda</groupId>
+    <groupId>io.github.yoazmenda</groupId>
     <artifactId>huggingface-inference</artifactId>
     <version>1.0.0</version>
 </dependency>
